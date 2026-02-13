@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "name": "VRControls",
+    "maps": [
+        {
+            "name": "Gameplay",
+            "id": "f8bbbafd-4b72-495f-bf3d-e65302abf1ee",
+            "actions": [
+                {
+                    "name": "Fire",
+                    "type": "Button",
+                    "id": "45b4f0a9-8178-42f0-8cb0-b02fc0a31f16",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "cff873ea-3473-407a-bd2c-1873d65124a1",
+                    "path": "<Joystick>/trigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

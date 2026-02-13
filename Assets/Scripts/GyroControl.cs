@@ -3,15 +3,20 @@ using UnityEngine.InputSystem; // Required for Unity 6 Input
 
 public class VRCameraNewInput : MonoBehaviour
 {
+    [SerializeField] private float _rotSpeed = 10f;
+    
     // The container to offset the camera
-    private Transform camParent; 
+    private Transform _camParent;
+    private Transform _transform;
 
-    void Start()
+    private void Start()
     {
+        _transform = transform;
+        
         // 1. Create a parent to neutralize initial rotation offset
-        camParent = new GameObject("CamParent").transform;
-        camParent.position = transform.position;
-        transform.SetParent(camParent);
+        _camParent = new GameObject("CamParent").transform;
+        _camParent.position = _transform.position;
+        _transform.SetParent(_camParent);
 
         // 2. Enable the sensors explicitly!
         // In the new system, sensors are often disabled by default to save battery.
@@ -19,21 +24,21 @@ public class VRCameraNewInput : MonoBehaviour
             InputSystem.EnableDevice(AttitudeSensor.current);
         
         // 3. Fix the initial rotation (90 degree rotation for landscape)
-        camParent.rotation = Quaternion.Euler(90, 0, 0);
+        _camParent.rotation = Quaternion.Euler(90, 0, 0);
     }
 
-    void Update()
+    private void Update()
     {
         // Check if the sensor exists
-        if (AttitudeSensor.current != null)
-        {
-            // Read the rotation directly
-            Quaternion rot = AttitudeSensor.current.attitude.ReadValue();
+        if (AttitudeSensor.current == null) return;
+        
+        // Read the rotation directly
+        var rot = AttitudeSensor.current.attitude.ReadValue();
             
-            // Remap coordinates: Unity 6 Input System usually matches the screen orientation
-            // better, but we often still need to re-orient for VR landscape.
-            // This specific remapping depends on if you locked the screen to Landscape Left.
-            transform.localRotation = new Quaternion(rot.x, rot.y, -rot.z, -rot.w);
-        }
+        // Remap coordinates: Unity 6 Input System usually matches the screen orientation
+        // better, but we often still need to re-orient for VR landscape.
+        // This specific remapping depends on if you locked the screen to Landscape Left.
+        var newRot = new Quaternion(rot.x, rot.y, -rot.z, -rot.w);
+        _transform.localRotation = Quaternion.Lerp(_transform.localRotation, newRot, Time.deltaTime * _rotSpeed);
     }
 }

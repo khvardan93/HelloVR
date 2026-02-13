@@ -1,40 +1,39 @@
 using UnityEngine;
+using UnityEngine.InputSystem; // Required for Unity 6 Input
 
-public class GyroControl : MonoBehaviour
+public class VRCameraNewInput : MonoBehaviour
 {
-    private GameObject cameraContainer;
-    private Quaternion rotationFix;
+    // The container to offset the camera
+    private Transform camParent; 
 
     void Start()
     {
-        // 1. Create a parent object to hold the camera transform
-        // This helps neutralize the initial phone rotation offset
-        cameraContainer = new GameObject("Camera Container");
-        cameraContainer.transform.position = transform.position;
-        transform.SetParent(cameraContainer.transform);
+        // 1. Create a parent to neutralize initial rotation offset
+        camParent = new GameObject("CamParent").transform;
+        camParent.position = transform.position;
+        transform.SetParent(camParent);
 
-        // 2. Enable the Gyroscope
-        if (SystemInfo.supportsGyroscope)
-        {
-            Input.gyro.enabled = true;
-
-            // 3. Fix the rotation difference between Unity (Left-handed) 
-            // and Phone Gyro (Right-handed)
-            cameraContainer.transform.rotation = Quaternion.Euler(90f, 90f, 0f);
-            rotationFix = new Quaternion(0, 0, 1, 0);
-        }
+        // 2. Enable the sensors explicitly!
+        // In the new system, sensors are often disabled by default to save battery.
+        if (AttitudeSensor.current != null)
+            InputSystem.EnableDevice(AttitudeSensor.current);
+        
+        // 3. Fix the initial rotation (90 degree rotation for landscape)
+        camParent.rotation = Quaternion.Euler(90, 0, 0);
     }
 
     void Update()
     {
-        if (SystemInfo.supportsGyroscope)
+        // Check if the sensor exists
+        if (AttitudeSensor.current != null)
         {
-            // Read the gyro attitude
-            Quaternion gyroAttitude = Input.gyro.attitude;
+            // Read the rotation directly
+            Quaternion rot = AttitudeSensor.current.attitude.ReadValue();
             
-            // Remap coordinates for Unity
-            // We swap Y and Z and invert types to match Unity's coordinate system
-            transform.localRotation = gyroAttitude * rotationFix;
+            // Remap coordinates: Unity 6 Input System usually matches the screen orientation
+            // better, but we often still need to re-orient for VR landscape.
+            // This specific remapping depends on if you locked the screen to Landscape Left.
+            transform.localRotation = new Quaternion(rot.x, rot.y, -rot.z, -rot.w);
         }
     }
 }

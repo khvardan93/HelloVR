@@ -58,6 +58,6 @@ public class KeyboardControl : MonoBehaviour
     private void Update()
     {
         if (_right || _left) _transform.RotateAround(Vector3.up, (_right ? _rotSpeed : -_rotSpeed) * Time.deltaTime);
-        if (_up || _down) _transform.RotateAround(_transform.right, (_up ? _rotSpeed : -_rotSpeed) * Time.deltaTime);
+        if (_up || _down) _transform.RotateAround(-_transform.right, (_up ? _rotSpeed : -_rotSpeed) * Time.deltaTime);
     }
 }

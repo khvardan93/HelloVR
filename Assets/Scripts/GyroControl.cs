@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem; // Required for Unity 6 Input
 
-public class VRCameraNewInput : MonoBehaviour
+public class GyroControl : MonoBehaviour
 {
     [SerializeField] private float _rotSpeed = 10f;
     

@@ -4,13 +4,13 @@ Shader "Custom/RippleMultiURP"
     {
         _BaseColor ("Wall Color", Color) = (0.1, 0.1, 0.1, 1)
         _MainTex ("Wall Texture", 2D) = "white" {}
-
         [HDR] _RippleColor ("Ripple Color", Color) = (0, 1, 1, 1)
         
         _WaveSpeed ("Speed", Float) = 5
         _WaveFrequency ("Frequency", Float) = 10
         _MaxDistance ("Max Size", Float) = 5
-        _RippleWidth ("Ripple Width", Float) = 1
+        _Duration ("Duration", Float) = 1
+        _GameTime ("Game Time", Float) = 0
     }
 
     SubShader
@@ -25,8 +25,7 @@ Shader "Custom/RippleMultiURP"
             #pragma fragment frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            // Define the maximum number of ripples we can handle at once
-            #define MAX_RIPPLES 10
+            #define MAX_RIPPLES 100
 
             struct Attributes
             {
@@ -48,13 +47,13 @@ Shader "Custom/RippleMultiURP"
                 float _WaveSpeed;
                 float _WaveFrequency;
                 float _MaxDistance;
-                float _RippleWidth;
+                float _Duration;
+                float _GameTime;
 
-                // --- ARRAYS ---
-                // We cannot expose arrays to the Inspector properties, 
-                // but we can set them via C# script.
-                float4 _HitPositions[MAX_RIPPLES]; // Where did we hit?
-                float _HitStartTimes[MAX_RIPPLES]; // When did we hit? (Time.time)
+                // FIX: One single array. 
+                // XYZ = Position, W = Start Time.
+                // This prevents all GPU memory alignment bugs.
+                float4 _HitData[MAX_RIPPLES]; 
             CBUFFER_END
 
             TEXTURE2D(_MainTex);
@@ -74,54 +73,33 @@ Shader "Custom/RippleMultiURP"
                 half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
                 half3 finalColor = texColor.rgb * _BaseColor.rgb;
 
-                // We will accumulate the "strength" of all ripples here
                 float totalRippleMask = 0;
 
-                // --- THE LOOP ---
-                // Check all 10 possible ripple slots
                 for (int i = 0; i < MAX_RIPPLES; i++)
                 {
-                    float3 hitPos = _HitPositions[i].xyz;
-                    float startTime = _HitStartTimes[i];
+                    // Unpack the data
+                    float3 hitPos = _HitData[i].xyz;
+                    float startTime = _HitData[i].w;
 
-                    // Optimization: If startTime is 0, this slot is empty/unused
                     if (startTime <= 0) continue;
 
-                    // 1. Calculate how long this specific ripple has been alive
-                    float timeAlive = _Time.y - startTime;
-
-                    // If time is negative (future?) or too old, skip it
-                    // (Optional: You can add a max duration check here)
+                    float timeAlive = _GameTime - startTime;
                     if (timeAlive < 0) continue;
 
-                    // 2. Distance from THIS hit point
                     float dist = distance(input.positionWS, hitPos);
 
-                    // 3. Logic: Wave moves based on timeAlive
                     if (dist < _MaxDistance)
                     {
-                        // The wave moves OUTWARD as time increases
                         float waveValue = sin(dist * _WaveFrequency - timeAlive * _WaveSpeed);
-
-                        // Create the ring shape
                         float mask = smoothstep(0.5, 1.0, waveValue);
-                        
-                        // Decay over distance
                         float distFade = 1.0 - saturate(dist / _MaxDistance);
-                        
-                        // Decay over TIME (So they fade out after a few seconds)
-                        // Let's say it lasts 2 seconds.
-                        float timeFade = 1.0 - saturate(timeAlive / 2.0);
+                        float timeFade = 1.0 - saturate(timeAlive / _Duration); // Fades out over 2 seconds
 
-                        // Combine
                         totalRippleMask += mask * distFade * timeFade;
                     }
                 }
 
-                // Clamp the result so multiple ripples don't turn pure white instantly
                 totalRippleMask = saturate(totalRippleMask);
-
-                // Mix the Wall Color with the Ripple Color
                 finalColor = lerp(finalColor, _RippleColor.rgb, totalRippleMask);
 
                 return half4(finalColor, 1);

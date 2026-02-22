@@ -3,10 +3,10 @@ using UnityEngine;
 public class WallRipple : MonoBehaviour
 {
     private Material _material;
+    private static int MAX_COUNT = 100;
 
     // Fixed size arrays to match the Shader
-    private Vector4[] _hitPositions = new Vector4[1000];
-    private float[] _hitStartTimes = new float[1000];
+    private Vector4[] _hitData = new Vector4[MAX_COUNT];
     
     // Tracks which slot (0-9) to use next
     private int _currentIndex = 0;
@@ -17,10 +17,16 @@ public class WallRipple : MonoBehaviour
 
         // Initialize arrays so the shader doesn't get garbage data
         // (Though C# defaults to 0, it's good practice)
-        for (int i = 0; i < 1000; i++)
+        for (int i = 0; i < MAX_COUNT; i++)
         {
-            _hitStartTimes[i] = 0; // 0 means "inactive" in our shader logic
+            _hitData[i] = new Vector4(0, 0, 0, -100f); // 0 means "inactive" in our shader logic
         }
+    }
+    
+    private void Update()
+    {
+        // Keep the clock synced!
+        _material.SetFloat("_GameTime", Time.time);
     }
     
     // This function runs when the BALL hits the WALL
@@ -30,23 +36,16 @@ public class WallRipple : MonoBehaviour
         {
             Vector3 hitPoint = collision.contacts[0].point;
 
-            // 1. Record the Hit
-            _hitPositions[_currentIndex] = hitPoint;
+            // PACK THE DATA: X, Y, Z = Position. W = Time.
+            _hitData[_currentIndex] = new Vector4(hitPoint.x, hitPoint.y, hitPoint.z, Time.time);
+
+            // Send the single array to the shader
+            _material.SetVectorArray("_HitData", _hitData);
+
+            // Increment and loop
+            _currentIndex = (_currentIndex + 1) % 10;
             
-            // 2. Record the Time (Unity's Time.timeSinceLevelLoad matches _Time.y)
-            _hitStartTimes[_currentIndex] = Time.timeSinceLevelLoad;
-
-            // 3. Send Arrays to Shader
-            // Note: We send the WHOLE array every time. This is fast enough.
-            _material.SetVectorArray("_HitPositions", _hitPositions);
-            _material.SetFloatArray("_HitStartTimes", _hitStartTimes);
-
-            // 4. Increment Index (Loop back to 0 if we hit 10)
-            _currentIndex++;
-            if (_currentIndex >= 10)
-            {
-                _currentIndex = 0;
-            }
+            Destroy(collision.gameObject);
         }
     }
 }

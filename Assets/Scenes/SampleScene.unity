@@ -3078,6 +3078,7 @@ GameObject:
   - component: {fileID: 1665134648}
   - component: {fileID: 1665134647}
   - component: {fileID: 1665134646}
+  - component: {fileID: 1665134649}
   m_Layer: 5
   m_Name: ReticleCanvas
   m_TagString: Untagged
@@ -3168,6 +3169,19 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &1665134649
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1665134644}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1463271dc9fecc48b2db56a8a5171da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _reachDistance: 1000
 --- !u!1 &1672064513
 GameObject:
   m_ObjectHideFlags: 0
@@ -3207,7 +3221,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1672064513}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.72133726, z: 0, w: 0.692584}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3215,7 +3229,7 @@ Transform:
   - {fileID: 1350166193}
   - {fileID: 2016164310}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 92.33, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1672064518
 MonoBehaviour:
   m_ObjectHideFlags: 0
